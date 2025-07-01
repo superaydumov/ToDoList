@@ -23,6 +23,5 @@ final class ToDoListRouter: ToDoListRouterProtocol {
     func navigateToDetailsVC() {
         let detailsVC = DetailsViewController()
         viewController?.navigationController?.pushViewController(detailsVC, animated: true)
-        print("\(String(describing: viewController?.navigationController))")
     }
 }
