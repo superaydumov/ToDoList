@@ -9,6 +9,7 @@ protocol ToDoListPresenterProtocol: AnyObject {
     var router: ToDoListRouterProtocol? { get set}
     func configureView()
     func navigateToDetailsVC()
+    func navigateToAddTaskScreen()
 }
 
 final class ToDoListPresenter: ToDoListPresenterProtocol {
@@ -30,5 +31,9 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
     func navigateToDetailsVC() {
         router?.navigateToDetailsVC()
+    }
+
+    func navigateToAddTaskScreen() {
+        router?.navigateToAddTaskScreen()
     }
 }

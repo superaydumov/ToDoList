@@ -18,6 +18,7 @@ final class ToDoListViewController: UIViewController {
     let configurator: ToDoListConfiguratorProtocol = ToDoListConfigurator()
 
     private var searchController: UISearchController?
+    private var bottomLabelText: String?
 
     // MARK: - Computed properties
     private lazy var testButton: UIButton = {
@@ -30,6 +31,42 @@ final class ToDoListViewController: UIViewController {
         return button
     }()
 
+    private lazy var bottomView: UIView = {
+        let topBorder = CALayer()
+        topBorder.backgroundColor = UIColor.appWhiteOpacity.cgColor
+        topBorder.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: UIScreen.main.bounds.width,
+            height: 1
+        )
+
+        let view = UIView()
+        view.backgroundColor = .appGrayBackground
+        view.layer.addSublayer(topBorder)
+
+        return view
+    }()
+
+    private lazy var bottomLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = .appWhite
+        label.textAlignment = .natural
+        label.text = bottomLabelText
+
+        return label
+    }()
+
+    private lazy var bottomButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(.bottomButton, for: .normal)
+        button.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
+        button.addTarget(self, action: #selector(bottomButtonDidTap), for: .touchUpInside)
+
+        return button
+    }()
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,6 +74,8 @@ final class ToDoListViewController: UIViewController {
 
         configurator.configure(with: self)
         presenter?.configureView()
+
+        bottomLabelText = "5 задач"
 
         navBarSetup()
         setupSubViews()
@@ -46,9 +85,18 @@ final class ToDoListViewController: UIViewController {
     // MARK: - Private methods
     private func setupSubViews() {
         [
-            testButton
+            testButton,
+            bottomView
         ].forEach {
             view.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+
+        [
+            bottomLabel,
+            bottomButton
+        ].forEach {
+            bottomView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
     }
@@ -57,7 +105,19 @@ final class ToDoListViewController: UIViewController {
         NSLayoutConstraint.activate([
             testButton.widthAnchor.constraint(equalToConstant: 150),
             testButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            testButton.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            testButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+
+            bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bottomView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bottomView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
+
+            bottomLabel.centerXAnchor.constraint(equalTo: bottomView.centerXAnchor),
+            bottomLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20.5),
+            bottomLabel.topAnchor.constraint(equalTo: bottomView.topAnchor, constant: 15.5),
+
+            bottomButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -15.5),
+            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor)
         ])
     }
 
@@ -103,6 +163,10 @@ final class ToDoListViewController: UIViewController {
     // MARK: - Actions
     @objc private func buttonDidTap() {
         presenter?.navigateToDetailsVC()
+    }
+
+    @objc private func bottomButtonDidTap() {
+        presenter?.navigateToAddTaskScreen()
     }
 }
 
