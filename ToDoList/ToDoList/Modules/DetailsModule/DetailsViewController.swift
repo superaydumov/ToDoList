@@ -14,6 +14,7 @@ protocol DetailsViewControllerProtocol: AnyObject {
 final class DetailsViewController: UIViewController {
 
     var presenter: DetailsPresenterProtocol?
+    var selectedToDo: ToDo
     let configurator: DetailsConfiguratorProtocol = DetailsConfigurator()
 
     // MARK: - Lifecycle
@@ -23,6 +24,16 @@ final class DetailsViewController: UIViewController {
 
         configurator.configure(with: self)
         presenter?.configureView()
+        print(selectedToDo)
+    }
+
+    init(selectedToDo: ToDo) {
+        self.selectedToDo = selectedToDo
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
