@@ -7,6 +7,7 @@
 
 protocol ToDoListRouterProtocol: AnyObject {
     func navigateToDetailsVC()
+    func navigateToAddTaskScreen()
 }
 
 final class ToDoListRouter: ToDoListRouterProtocol {
@@ -23,5 +24,10 @@ final class ToDoListRouter: ToDoListRouterProtocol {
     func navigateToDetailsVC() {
         let detailsVC = DetailsViewController()
         viewController?.navigationController?.pushViewController(detailsVC, animated: true)
+    }
+
+    func navigateToAddTaskScreen() {
+        let addTaskVC = AddTaskViewController()
+        viewController?.present(addTaskVC, animated: true)
     }
 }

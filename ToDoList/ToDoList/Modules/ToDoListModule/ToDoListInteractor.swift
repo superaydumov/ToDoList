@@ -6,7 +6,7 @@
 //
 
 protocol ToDoListInteractorProtocol: AnyObject {
-    // TODO: add needed methods
+    func fetchData()
 }
 
 final class ToDoListInteractor: ToDoListInteractorProtocol {
@@ -15,5 +15,10 @@ final class ToDoListInteractor: ToDoListInteractorProtocol {
 
     required init(presenter: ToDoListPresenterProtocol) {
         self.presenter = presenter
+    }
+
+    func fetchData() {
+        let downloadedData = cellMockData
+        presenter?.configureView(with: downloadedData)
     }
 }
