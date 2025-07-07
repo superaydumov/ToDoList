@@ -23,12 +23,34 @@ final class ToDoListViewController: UIViewController {
     // MARK: - Computed properties
     private lazy var testButton: UIButton = {
         let button = UIButton(type: .custom)
-        button.setTitle("Second VC", for: .normal)
+        button.setTitle("DetailsVC", for: .normal)
         button.backgroundColor = .black
         button.layer.cornerRadius = 16
         button.addTarget(self, action: #selector(buttonDidTap), for: .touchUpInside)
 
         return button
+    }()
+
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.estimatedRowHeight = 100
+        tableView.backgroundColor = .clear
+        tableView.separatorColor = .appWhiteOpacity
+        tableView.allowsMultipleSelection = false
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(
+            ToDoListTableViewCell.self,
+            forCellReuseIdentifier: ToDoListTableViewCell.reuseIdentifier
+        )
+        tableView.separatorInset = UIEdgeInsets(
+            top: 0,
+            left: 16,
+            bottom: 0,
+            right: 16
+        )
+
+        return tableView
     }()
 
     private lazy var bottomView: UIView = {
@@ -73,9 +95,9 @@ final class ToDoListViewController: UIViewController {
         view.backgroundColor = .appBackground
 
         configurator.configure(with: self)
-        presenter?.configureView()
+        presenter?.triggerDataLoading()
 
-        bottomLabelText = "5 задач"
+        bottomLabelText = "\(presenter?.toDoListModel?.total ?? .zero) задач"
 
         navBarSetup()
         setupSubViews()
@@ -85,7 +107,7 @@ final class ToDoListViewController: UIViewController {
     // MARK: - Private methods
     private func setupSubViews() {
         [
-            testButton,
+            tableView,
             bottomView
         ].forEach {
             view.addSubview($0)
@@ -93,6 +115,7 @@ final class ToDoListViewController: UIViewController {
         }
 
         [
+            testButton,
             bottomLabel,
             bottomButton
         ].forEach {
@@ -103,9 +126,10 @@ final class ToDoListViewController: UIViewController {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            testButton.widthAnchor.constraint(equalToConstant: 150),
-            testButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            testButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.bottomAnchor.constraint(equalTo: bottomView.topAnchor),
 
             bottomView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bottomView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -117,7 +141,11 @@ final class ToDoListViewController: UIViewController {
             bottomLabel.topAnchor.constraint(equalTo: bottomView.topAnchor, constant: 15.5),
 
             bottomButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -15.5),
-            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor)
+            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor),
+
+            testButton.widthAnchor.constraint(equalToConstant: 100),
+            testButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor),
+            testButton.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 16)
         ])
     }
 
@@ -167,6 +195,7 @@ final class ToDoListViewController: UIViewController {
 
     @objc private func bottomButtonDidTap() {
         presenter?.navigateToAddTaskScreen()
+        addHapticFeedback()
     }
 }
 
@@ -174,7 +203,7 @@ final class ToDoListViewController: UIViewController {
 extension ToDoListViewController: ToDoListViewControllerProtocol {
 
     func showToDoList() {
-        // TODO: add code to update ToDoList
+        tableView.reloadData()
     }
 }
 
@@ -198,5 +227,40 @@ extension ToDoListViewController: UITextFieldDelegate {
     ) -> Bool {
         textField.textColor = UIColor.appWhite
         return true
+    }
+}
+
+    // MARK: - UITableViewDataSource
+extension ToDoListViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return presenter?.toDoListModel?.todos.count ?? .zero
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: ToDoListTableViewCell.reuseIdentifier,
+            for: indexPath
+        ) as? ToDoListTableViewCell else { return UITableViewCell() }
+
+        guard var viewModel = presenter?.toDoListModel?.todos[indexPath.row] else { return UITableViewCell() }
+        cell.configureCell(with: viewModel)
+
+        cell.checkMarkButtonTapped = { [weak self] in
+            guard let self else { return }
+            viewModel.completed.toggle()
+            self.presenter?.toDoListModel?.todos[indexPath.row] = viewModel
+            // TODO: notify presenter to save updated data
+
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+        }
+
+        return cell
+    }
+}
+
+    // MARK: - UITableViewDelegate
+extension ToDoListViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
     }
 }

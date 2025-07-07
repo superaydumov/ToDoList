@@ -7,9 +7,12 @@
 
 protocol ToDoListPresenterProtocol: AnyObject {
     var router: ToDoListRouterProtocol? { get set}
-    func configureView()
+    var toDoListModel: ToDoListModel? { get set }
+
+    func configureView(with todos: ToDoListModel)
     func navigateToDetailsVC()
     func navigateToAddTaskScreen()
+    func triggerDataLoading()
 }
 
 final class ToDoListPresenter: ToDoListPresenterProtocol {
@@ -18,6 +21,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     weak var view: ToDoListViewControllerProtocol?
     var router: ToDoListRouterProtocol?
     var interactor: ToDoListInteractorProtocol?
+    var toDoListModel: ToDoListModel?
 
     // MARK: - Initializers
     required init(view: ToDoListViewControllerProtocol) {
@@ -25,7 +29,8 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     }
 
     // MARK: - Pubic methods
-    func configureView() {
+    func configureView(with todos: ToDoListModel) {
+        toDoListModel = todos
         view?.showToDoList()
     }
 
@@ -35,5 +40,9 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
     func navigateToAddTaskScreen() {
         router?.navigateToAddTaskScreen()
+    }
+
+    func triggerDataLoading() {
+        interactor?.fetchData()
     }
 }
