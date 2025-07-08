@@ -96,18 +96,12 @@ final class ToDoListViewController: UIViewController {
 
     // MARK: - Private methods
     private func setupSubViews() {
-        [
-            tableView,
-            bottomView
-        ].forEach {
+        [tableView, bottomView].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
 
-        [
-            bottomLabel,
-            bottomButton
-        ].forEach {
+        [bottomLabel, bottomButton].forEach {
             bottomView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -141,6 +135,17 @@ final class ToDoListViewController: UIViewController {
         navBar.largeTitleTextAttributes = [
             NSAttributedString.Key.foregroundColor: UIColor.appWhite
         ]
+
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .appBackground
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.appWhite]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.appWhite]
+
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .appAccent
 
         searchController = UISearchController(searchResultsController: nil)
         searchController?.searchResultsUpdater = self
@@ -206,7 +211,7 @@ extension ToDoListViewController: UITextFieldDelegate {
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String
     ) -> Bool {
-        textField.textColor = UIColor.appWhite
+        textField.textColor = .appWhite
         return true
     }
 }
