@@ -22,7 +22,7 @@ final class ToDoListRouter: ToDoListRouterProtocol {
 
     // MARK: - Public methods
     func navigateToDetailsVC(with selectedToDo: ToDo) {
-        let detailsVC = DetailsViewController(selectedToDo: selectedToDo, isEditingVC: false)
+        let detailsVC = DetailsViewController(selectedToDo: selectedToDo, isEditingVC: true)
         viewController?.navigationController?.pushViewController(detailsVC, animated: true)
     }
 

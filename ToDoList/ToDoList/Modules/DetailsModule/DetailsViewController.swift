@@ -31,6 +31,7 @@ final class DetailsViewController: UIViewController {
 
     private lazy var upperTextView: UITextView = {
         let view = UITextView()
+        view.inputAccessoryView = toolbar
         view.isScrollEnabled = false
         view.font = .systemFont(ofSize: 34, weight: .bold)
         view.textColor = .appWhite
@@ -55,6 +56,7 @@ final class DetailsViewController: UIViewController {
 
     private lazy var bottomTextView: UITextView = {
         let view = UITextView()
+        view.inputAccessoryView = toolbar
         view.isScrollEnabled = false
         view.font = .systemFont(ofSize: 16)
         view.textColor = .appWhite
@@ -64,6 +66,29 @@ final class DetailsViewController: UIViewController {
         view.textContainer.lineFragmentPadding = 0
 
         return view
+    }()
+
+    private lazy var toolbar = UIToolbar(
+        frame: CGRect(
+            x: 0,
+            y: view.bounds.height,
+            width: view.bounds.width,
+            height: 48
+        )
+    )
+
+    private lazy var enterButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = .appAccent
+        button.titleLabel?.font = .systemFont(ofSize: 16)
+        button.setTitle("Сохранить", for: .normal)
+        button.setTitleColor(.appGray, for: .normal)
+        button.addTarget(
+            self,
+            action: #selector(enterButtonDidTap(sender:)),
+            for: .touchUpInside
+        )
+        return button
     }()
 
     // MARK: - Lifecycle
@@ -78,6 +103,7 @@ final class DetailsViewController: UIViewController {
         setupSubviews()
         setupConstraints()
         configureVCData()
+        hideKeyboardWhenTappedAround()
     }
 
     // MARK: - Initializers
@@ -91,6 +117,7 @@ final class DetailsViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Private methods
     private func configureVCData() {
         let today = Date()
         dateLabel.text = today.convertDateToString()
@@ -101,6 +128,7 @@ final class DetailsViewController: UIViewController {
         case true:
             upperTextView.isEditable = true
             bottomTextView.isEditable = true
+            bottomTextView.becomeFirstResponder()
         case false:
             upperTextView.isEditable = false
             bottomTextView.isEditable = false
@@ -110,6 +138,11 @@ final class DetailsViewController: UIViewController {
     private func setupSubviews() {
         view.addSubview(scrollView)
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+
+        if isEditingVC {
+            toolbar.addSubview(enterButton)
+            enterButton.translatesAutoresizingMaskIntoConstraints = false
+        }
 
         [
             upperTextView,
@@ -146,9 +179,26 @@ final class DetailsViewController: UIViewController {
             bottomTextView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             bottomTextView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -40)
         ])
+
+        if isEditingVC {
+            NSLayoutConstraint.activate([
+                enterButton.leadingAnchor.constraint(equalTo: toolbar.leadingAnchor),
+                enterButton.trailingAnchor.constraint(equalTo: toolbar.trailingAnchor),
+                enterButton.topAnchor.constraint(equalTo: toolbar.topAnchor),
+                enterButton.bottomAnchor.constraint(equalTo: toolbar.bottomAnchor)
+            ])
+        }
     }
 
     // swiftlint:enable line_length
+
+    // MARK: - Actions
+
+    @objc func enterButtonDidTap(sender: AnyObject) {
+        // TODO: add saving to CoreData
+        addHapticFeedback()
+        print("enterButtonDidTap")
+    }
 }
 
     // MARK: - DetailsViewControllerProtocol
