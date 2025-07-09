@@ -13,7 +13,7 @@ protocol ToDoListViewControllerProtocol: AnyObject {
 
 final class ToDoListViewController: UIViewController {
 
-    // MARK: - Constants
+    // MARK: - Stored properties
     var presenter: ToDoListPresenterProtocol?
     let configurator: ToDoListConfiguratorProtocol = ToDoListConfigurator()
 
@@ -21,16 +21,6 @@ final class ToDoListViewController: UIViewController {
     private var bottomLabelText: String?
 
     // MARK: - Computed properties
-    private lazy var testButton: UIButton = {
-        let button = UIButton(type: .custom)
-        button.setTitle("DetailsVC", for: .normal)
-        button.backgroundColor = .black
-        button.layer.cornerRadius = 16
-        button.addTarget(self, action: #selector(buttonDidTap), for: .touchUpInside)
-
-        return button
-    }()
-
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
         tableView.estimatedRowHeight = 100
@@ -106,19 +96,12 @@ final class ToDoListViewController: UIViewController {
 
     // MARK: - Private methods
     private func setupSubViews() {
-        [
-            tableView,
-            bottomView
-        ].forEach {
+        [tableView, bottomView].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
 
-        [
-            testButton,
-            bottomLabel,
-            bottomButton
-        ].forEach {
+        [bottomLabel, bottomButton].forEach {
             bottomView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
@@ -141,11 +124,7 @@ final class ToDoListViewController: UIViewController {
             bottomLabel.topAnchor.constraint(equalTo: bottomView.topAnchor, constant: 15.5),
 
             bottomButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -15.5),
-            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor),
-
-            testButton.widthAnchor.constraint(equalToConstant: 100),
-            testButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor),
-            testButton.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 16)
+            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor)
         ])
     }
 
@@ -156,6 +135,17 @@ final class ToDoListViewController: UIViewController {
         navBar.largeTitleTextAttributes = [
             NSAttributedString.Key.foregroundColor: UIColor.appWhite
         ]
+
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .appBackground
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.appWhite]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.appWhite]
+
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .appAccent
 
         searchController = UISearchController(searchResultsController: nil)
         searchController?.searchResultsUpdater = self
@@ -189,10 +179,6 @@ final class ToDoListViewController: UIViewController {
     }
 
     // MARK: - Actions
-    @objc private func buttonDidTap() {
-        presenter?.navigateToDetailsVC()
-    }
-
     @objc private func bottomButtonDidTap() {
         presenter?.navigateToAddTaskScreen()
         addHapticFeedback()
@@ -225,7 +211,7 @@ extension ToDoListViewController: UITextFieldDelegate {
         shouldChangeCharactersIn range: NSRange,
         replacementString string: String
     ) -> Bool {
-        textField.textColor = UIColor.appWhite
+        textField.textColor = .appWhite
         return true
     }
 }
@@ -260,7 +246,18 @@ extension ToDoListViewController: UITableViewDataSource {
 
     // MARK: - UITableViewDelegate
 extension ToDoListViewController: UITableViewDelegate {
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    func tableView(
+        _ tableView: UITableView,
+        heightForRowAt indexPath: IndexPath
+    ) -> CGFloat {
         return UITableView.automaticDimension
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        didSelectRowAt indexPath: IndexPath
+    ) {
+        guard let selectedToDo = presenter?.toDoListModel?.todos[indexPath.row] else { return }
+        presenter?.navigateToDetailsVC(with: selectedToDo)
     }
 }

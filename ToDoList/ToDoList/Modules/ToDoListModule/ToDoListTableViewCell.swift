@@ -101,10 +101,7 @@ final class ToDoListTableViewCell: UITableViewCell {
 
     // MARK: - Private methods
     private func addSubviews() {
-        [
-            cellCheckMark,
-            verticalStack
-        ].forEach {
+        [cellCheckMark, verticalStack].forEach {
             self.contentView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }

@@ -6,7 +6,7 @@
 //
 
 protocol ToDoListRouterProtocol: AnyObject {
-    func navigateToDetailsVC()
+    func navigateToDetailsVC(with selectedToDo: ToDo)
     func navigateToAddTaskScreen()
 }
 
@@ -21,8 +21,8 @@ final class ToDoListRouter: ToDoListRouterProtocol {
     }
 
     // MARK: - Public methods
-    func navigateToDetailsVC() {
-        let detailsVC = DetailsViewController()
+    func navigateToDetailsVC(with selectedToDo: ToDo) {
+        let detailsVC = DetailsViewController(selectedToDo: selectedToDo, isEditingVC: true)
         viewController?.navigationController?.pushViewController(detailsVC, animated: true)
     }
 

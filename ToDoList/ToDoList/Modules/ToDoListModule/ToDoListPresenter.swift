@@ -10,7 +10,7 @@ protocol ToDoListPresenterProtocol: AnyObject {
     var toDoListModel: ToDoListModel? { get set }
 
     func configureView(with todos: ToDoListModel)
-    func navigateToDetailsVC()
+    func navigateToDetailsVC(with selectedToDo: ToDo)
     func navigateToAddTaskScreen()
     func triggerDataLoading()
 }
@@ -34,8 +34,8 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
         view?.showToDoList()
     }
 
-    func navigateToDetailsVC() {
-        router?.navigateToDetailsVC()
+    func navigateToDetailsVC(with selectedToDo: ToDo) {
+        router?.navigateToDetailsVC(with: selectedToDo)
     }
 
     func navigateToAddTaskScreen() {
