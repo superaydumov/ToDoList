@@ -28,6 +28,13 @@ final class ToDoListRouter: ToDoListRouterProtocol {
 
     func navigateToAddTaskScreen() {
         let addTaskVC = AddTaskViewController()
+        addTaskVC.modalPresentationStyle = .pageSheet
+
+        if let sheet = addTaskVC.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+
         viewController?.present(addTaskVC, animated: true)
     }
 }

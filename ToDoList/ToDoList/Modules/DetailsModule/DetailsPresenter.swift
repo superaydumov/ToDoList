@@ -6,7 +6,7 @@
 //
 
 protocol DetailsPresenterProtocol: AnyObject {
-    var router: DetailsRouterProtocol? { get set}
+    var router: DetailsRouterProtocol? { get set }
     func configureView()
 }
 

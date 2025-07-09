@@ -24,7 +24,7 @@ var cellMockData: ToDoListModel = ToDoListModel(
             todo: "Improve touch typing Improve touch typing Improve touch typing Improve touch typing Improve touch typing Improve touch typing",
             completed: false,
             userId: 89
-        ),
+        )
     ],
     total: 157,
     skip: 0,

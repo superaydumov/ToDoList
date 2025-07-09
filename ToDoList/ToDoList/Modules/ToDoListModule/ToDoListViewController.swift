@@ -73,7 +73,7 @@ final class ToDoListViewController: UIViewController {
     private lazy var bottomButton: UIButton = {
         let button = UIButton(type: .custom)
         button.setImage(.bottomButton, for: .normal)
-        button.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
+//        button.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
         button.addTarget(self, action: #selector(bottomButtonDidTap), for: .touchUpInside)
 
         return button
@@ -124,7 +124,9 @@ final class ToDoListViewController: UIViewController {
             bottomLabel.topAnchor.constraint(equalTo: bottomView.topAnchor, constant: 15.5),
 
             bottomButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -15.5),
-            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor)
+            bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor),
+            bottomButton.heightAnchor.constraint(equalToConstant: 22),
+            bottomButton.widthAnchor.constraint(equalToConstant: 22)
         ])
     }
 
