@@ -209,8 +209,11 @@ final class ToDoListViewController: UIViewController {
             title: "Удалить",
             image: UIImage(systemName: "trash"),
             attributes: .destructive) { _ in
-                // TODO: add code to delete task
-                print("Delete tapped on row \(indexPath.row)")
+                guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
+                self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
+                self.showToDoList()
+
+                // TODO: add code sync with CoreData (inside presenter)
             }
 
         return UIMenu(

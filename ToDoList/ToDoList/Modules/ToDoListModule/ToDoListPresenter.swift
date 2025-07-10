@@ -14,6 +14,7 @@ protocol ToDoListPresenterProtocol: AnyObject {
     func navigateToEditTask(with selectedToDo: ToDo)
     func navigateToAddTaskScreen()
     func triggerDataLoading()
+    func deleteTaskFromArray(itemToDelete: ToDo)
 }
 
 final class ToDoListPresenter: ToDoListPresenterProtocol {
@@ -49,5 +50,14 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
     func triggerDataLoading() {
         interactor?.fetchData()
+    }
+
+    func deleteTaskFromArray(itemToDelete: ToDo) {
+        guard var model = toDoListModel else { return }
+
+        model.todos.removeAll { $0.id == itemToDelete.id }
+        model.total = model.todos.count
+        
+        toDoListModel = model
     }
 }

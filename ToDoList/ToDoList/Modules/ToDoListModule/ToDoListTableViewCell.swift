@@ -79,6 +79,14 @@ final class ToDoListTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func prepareForReuse() {
+        super.prepareForReuse()
+
+        verticalStack.backgroundColor = .clear
+        verticalStack.alpha = 1.0
+        verticalStack.transform = .identity
+    }
+
     // MARK: - Public methods
     func configureCell(with viewModel: ToDo) {
         let image: UIImage = viewModel.completed ? .checkMarkFilled : .checkMarkEmpty
