@@ -12,6 +12,9 @@ final class ToDoListTableViewCell: UITableViewCell {
     // MARK: - Stored properties
     static let reuseIdentifier = "ToDoListTableViewCell"
     var checkMarkButtonTapped: (() -> Void)?
+    var preview: UIView {
+        return verticalStack
+    }
 
     // MARK: - Computed properties
     private lazy var cellCheckMark: UIButton = {
@@ -54,6 +57,8 @@ final class ToDoListTableViewCell: UITableViewCell {
         stack.axis = .vertical
         stack.spacing = 6
         stack.alignment = .leading
+        stack.isLayoutMarginsRelativeArrangement = true
+        stack.layoutMargins = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
 
         return stack
     }()
@@ -63,6 +68,7 @@ final class ToDoListTableViewCell: UITableViewCell {
         super.init(style: .default, reuseIdentifier: reuseIdentifier)
 
         self.backgroundColor = .clear
+        self.contentView.backgroundColor = .appBackground
         self.selectionStyle = .none
 
         addSubviews()
@@ -99,6 +105,10 @@ final class ToDoListTableViewCell: UITableViewCell {
         }
     }
 
+    func setPreviewActive(_ active: Bool) {
+        verticalStack.backgroundColor = active ? .appGray : .clear
+    }
+
     // MARK: - Private methods
     private func addSubviews() {
         [cellCheckMark, verticalStack].forEach {
@@ -119,7 +129,7 @@ final class ToDoListTableViewCell: UITableViewCell {
     private func setupConstraints() {
         NSLayoutConstraint.activate([
             cellCheckMark.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            cellCheckMark.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            cellCheckMark.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
             cellCheckMark.heightAnchor.constraint(equalToConstant: 24),
             cellCheckMark.widthAnchor.constraint(equalToConstant: 24),
 
