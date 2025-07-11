@@ -8,6 +8,7 @@
 protocol ToDoListPresenterProtocol: AnyObject {
     var router: ToDoListRouterProtocol? { get set}
     var toDoListModel: ToDoListModel? { get set }
+    var filteredToDos: [ToDo] { get set }
 
     func configureView(with todos: ToDoListModel)
     func navigateToDetailsVC(with selectedToDo: ToDo)
@@ -24,6 +25,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     var router: ToDoListRouterProtocol?
     var interactor: ToDoListInteractorProtocol?
     var toDoListModel: ToDoListModel?
+    var filteredToDos = [ToDo]()
 
     // MARK: - Initializers
     required init(view: ToDoListViewControllerProtocol) {
