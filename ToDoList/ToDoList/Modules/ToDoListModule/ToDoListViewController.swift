@@ -73,10 +73,38 @@ final class ToDoListViewController: UIViewController {
     private lazy var bottomButton: UIButton = {
         let button = UIButton(type: .custom)
         button.setImage(.bottomButton, for: .normal)
-//        button.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
         button.addTarget(self, action: #selector(bottomButtonDidTap), for: .touchUpInside)
 
         return button
+    }()
+
+    private lazy var plugView: UIImageView = {
+        let view = UIImageView()
+        view.image = .plug
+        view.layer.cornerRadius = 16
+        view.layer.masksToBounds = true
+
+        return view
+    }()
+
+    private lazy var plugLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .appWhite
+        label.textAlignment = .natural
+        label.text = "Список задач пуст"
+
+        return label
+    }()
+
+    private lazy var verticalStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.alignment = .center
+        stack.isHidden = true
+
+        return stack
     }()
 
     // MARK: - Lifecycle
@@ -96,8 +124,17 @@ final class ToDoListViewController: UIViewController {
 
     // MARK: - Private methods
     private func setupSubViews() {
-        [tableView, bottomView].forEach {
+        [
+            verticalStack,
+            tableView,
+            bottomView
+        ].forEach {
             view.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+
+        [plugView, plugLabel].forEach {
+            verticalStack.addArrangedSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -109,6 +146,12 @@ final class ToDoListViewController: UIViewController {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
+            plugView.widthAnchor.constraint(equalToConstant: 200),
+            plugView.heightAnchor.constraint(equalToConstant: 200),
+
+            verticalStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            verticalStack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -180,6 +223,66 @@ final class ToDoListViewController: UIViewController {
         navigationItem.hidesSearchBarWhenScrolling = false
     }
 
+    private func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
+        let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
+            guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
+            self.presenter?.navigateToEditTask(with: toDo)
+            addHapticFeedback()
+        }
+
+        let shareAction = UIAction(
+            title: "Поделиться",
+            image: UIImage(
+                systemName: "square.and.arrow.up"
+            )
+        ) { [weak self] _ in
+            guard let self else { return }
+            let itemToShare = "Посмотри на эту задачу \(indexPath.row)"
+
+            let activityVC = UIActivityViewController(activityItems: [itemToShare], applicationActivities: nil)
+            if let popoverController = activityVC.popoverPresentationController {
+                if let cell = tableView.cellForRow(at: indexPath) {
+                    popoverController.sourceView = cell
+                    popoverController.sourceRect = cell.bounds
+                }
+            }
+
+            self.present(activityVC, animated: true)
+            addHapticFeedback()
+        }
+
+        let deleteAction = UIAction(
+            title: "Удалить",
+            image: UIImage(systemName: "trash"),
+            attributes: .destructive) { _ in
+                guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
+                self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
+                addHapticFeedback()
+
+                // TODO: add code sync with CoreData (inside presenter)
+            }
+
+        return UIMenu(
+            children: [
+                editAction,
+                shareAction,
+                deleteAction
+            ]
+        )
+    }
+
+    private func getIndexPathFromConfiguration(with configuration: UIContextMenuConfiguration) -> IndexPath? {
+        guard let identifier = configuration.identifier as? String else { return nil }
+        let components = identifier.components(separatedBy: ":")
+
+        guard let rowString = components.first,
+              let sectionString = components.last,
+              let row = Int(rowString),
+              let section = Int(sectionString) else { return nil }
+
+        return IndexPath(row: row, section: section)
+    }
+
     // MARK: - Actions
     @objc private func bottomButtonDidTap() {
         presenter?.navigateToAddTaskScreen()
@@ -191,6 +294,9 @@ final class ToDoListViewController: UIViewController {
 extension ToDoListViewController: ToDoListViewControllerProtocol {
 
     func showToDoList() {
+        let isEmpty = presenter?.toDoListModel?.todos.isEmpty ?? true
+        verticalStack.isHidden = !isEmpty
+        tableView.isHidden = isEmpty
         tableView.reloadData()
     }
 }
@@ -248,6 +354,7 @@ extension ToDoListViewController: UITableViewDataSource {
 
     // MARK: - UITableViewDelegate
 extension ToDoListViewController: UITableViewDelegate {
+
     func tableView(
         _ tableView: UITableView,
         heightForRowAt indexPath: IndexPath
@@ -262,4 +369,76 @@ extension ToDoListViewController: UITableViewDelegate {
         guard let selectedToDo = presenter?.toDoListModel?.todos[indexPath.row] else { return }
         presenter?.navigateToDetailsVC(with: selectedToDo)
     }
+
+    func tableView(
+        _ tableView: UITableView,
+        contextMenuConfigurationForRowAt indexPath: IndexPath,
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        let identifier = "\(indexPath.row):\(indexPath.section)" as NSString
+
+        return UIContextMenuConfiguration(identifier: identifier, previewProvider: nil) { _ in
+            return self.makeContextMenu(for: indexPath)
+        }
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        previewForHighlightingContextMenuWithConfiguration configuration: UIContextMenuConfiguration
+    ) -> UITargetedPreview? {
+        guard let indexPath = getIndexPathFromConfiguration(with: configuration),
+              let cell = tableView.cellForRow(at: indexPath) as? ToDoListTableViewCell
+        else { return nil }
+
+        cell.setPreviewActive(true)
+
+        return UITargetedPreview(view: cell.preview)
+    }
+
+    func tableView(
+        _ tableView: UITableView,
+        willDisplayContextMenu configuration: UIContextMenuConfiguration,
+        animator: UIContextMenuInteractionAnimating?
+    ) {
+        guard let indexPath = getIndexPathFromConfiguration(with: configuration),
+              let cell = tableView.cellForRow(at: indexPath) as? ToDoListTableViewCell
+        else { return }
+
+        animator?.addAnimations {
+            cell.setPreviewActive(true)
+            cell.preview.alpha = 0.0
+            cell.preview.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+
+            UIView.animate(withDuration: 0.5) {
+                cell.preview.alpha = 1.0
+                cell.preview.transform = .identity
+            }
+        }
+    }
+
+    // swiftlint:disable multiple_closures_with_trailing_closure
+
+    func tableView(
+        _ tableView: UITableView,
+        willEndContextMenuInteraction configuration: UIContextMenuConfiguration,
+        animator: UIContextMenuInteractionAnimating?
+    ) {
+        guard let indexPath = getIndexPathFromConfiguration(with: configuration),
+              let cell = tableView.cellForRow(at: indexPath) as? ToDoListTableViewCell
+        else { return }
+
+        animator?.addAnimations {
+            UIView.animate(withDuration: 0.7, animations: {
+                cell.preview.alpha = 0.0
+                cell.preview.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            }) { _ in
+                cell.setPreviewActive(false)
+                cell.preview.alpha = 1.0
+                cell.preview.transform = .identity
+            }
+        }
+    }
+
+    // swiftlint:enable multiple_closures_with_trailing_closure
+
 }
