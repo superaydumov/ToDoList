@@ -57,7 +57,9 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
         model.todos.removeAll { $0.id == itemToDelete.id }
         model.total = model.todos.count
-        
+
         toDoListModel = model
+
+        view?.showToDoList()
     }
 }

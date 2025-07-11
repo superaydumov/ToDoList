@@ -78,6 +78,35 @@ final class ToDoListViewController: UIViewController {
         return button
     }()
 
+    private lazy var plugView: UIImageView = {
+        let view = UIImageView()
+        view.image = .plug
+        view.layer.cornerRadius = 16
+        view.layer.masksToBounds = true
+
+        return view
+    }()
+
+    private lazy var plugLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .appWhite
+        label.textAlignment = .natural
+        label.text = "Список задач пуст"
+
+        return label
+    }()
+
+    private lazy var verticalStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.alignment = .center
+        stack.isHidden = true
+
+        return stack
+    }()
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -95,8 +124,17 @@ final class ToDoListViewController: UIViewController {
 
     // MARK: - Private methods
     private func setupSubViews() {
-        [tableView, bottomView].forEach {
+        [
+            verticalStack,
+            tableView,
+            bottomView
+        ].forEach {
             view.addSubview($0)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
+
+        [plugView, plugLabel].forEach {
+            verticalStack.addArrangedSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
 
@@ -108,6 +146,12 @@ final class ToDoListViewController: UIViewController {
 
     private func setupConstraints() {
         NSLayoutConstraint.activate([
+            plugView.widthAnchor.constraint(equalToConstant: 200),
+            plugView.heightAnchor.constraint(equalToConstant: 200),
+
+            verticalStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            verticalStack.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -183,6 +227,7 @@ final class ToDoListViewController: UIViewController {
         let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
             guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
             self.presenter?.navigateToEditTask(with: toDo)
+            addHapticFeedback()
         }
 
         let shareAction = UIAction(
@@ -203,6 +248,7 @@ final class ToDoListViewController: UIViewController {
             }
 
             self.present(activityVC, animated: true)
+            addHapticFeedback()
         }
 
         let deleteAction = UIAction(
@@ -211,7 +257,7 @@ final class ToDoListViewController: UIViewController {
             attributes: .destructive) { _ in
                 guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
                 self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
-                self.showToDoList()
+                addHapticFeedback()
 
                 // TODO: add code sync with CoreData (inside presenter)
             }
@@ -248,6 +294,9 @@ final class ToDoListViewController: UIViewController {
 extension ToDoListViewController: ToDoListViewControllerProtocol {
 
     func showToDoList() {
+        let isEmpty = presenter?.toDoListModel?.todos.isEmpty ?? true
+        verticalStack.isHidden = !isEmpty
+        tableView.isHidden = isEmpty
         tableView.reloadData()
     }
 }
