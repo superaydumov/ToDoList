@@ -19,6 +19,9 @@ final class ToDoListViewController: UIViewController {
 
     private var searchController: UISearchController?
     private var bottomLabelText: String?
+    private var isFiltering: Bool {
+        return (searchController?.isActive ?? true) && !(searchController?.searchBar.text?.isEmpty ?? true)
+    }
 
     // MARK: - Computed properties
     private lazy var tableView: UITableView = {
@@ -65,7 +68,7 @@ final class ToDoListViewController: UIViewController {
         label.font = .systemFont(ofSize: 11)
         label.textColor = .appWhite
         label.textAlignment = .natural
-        label.text = bottomLabelText
+        label.text = "\(presenter?.toDoListModel?.total ?? .zero) задач"
 
         return label
     }()
@@ -80,7 +83,6 @@ final class ToDoListViewController: UIViewController {
 
     private lazy var plugView: UIImageView = {
         let view = UIImageView()
-        view.image = .plug
         view.layer.cornerRadius = 16
         view.layer.masksToBounds = true
 
@@ -114,8 +116,6 @@ final class ToDoListViewController: UIViewController {
 
         configurator.configure(with: self)
         presenter?.triggerDataLoading()
-
-        bottomLabelText = "\(presenter?.toDoListModel?.total ?? .zero) задач"
 
         navBarSetup()
         setupSubViews()
@@ -283,6 +283,11 @@ final class ToDoListViewController: UIViewController {
         return IndexPath(row: row, section: section)
     }
 
+    private func updatePlugs(with property: Bool) {
+        plugView.image = property ? .emptyPlug : .notFoundPlug
+        plugLabel.text = property ? "Список задач пуст" : "Таких задач не найдено"
+    }
+
     // MARK: - Actions
     @objc private func bottomButtonDidTap() {
         presenter?.navigateToAddTaskScreen()
@@ -295,6 +300,7 @@ extension ToDoListViewController: ToDoListViewControllerProtocol {
 
     func showToDoList() {
         let isEmpty = presenter?.toDoListModel?.todos.isEmpty ?? true
+        updatePlugs(with: isEmpty)
         verticalStack.isHidden = !isEmpty
         tableView.isHidden = isEmpty
         tableView.reloadData()
@@ -305,9 +311,18 @@ extension ToDoListViewController: ToDoListViewControllerProtocol {
 extension ToDoListViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
-        let searchText = searchController.searchBar.text
+        guard let searchText = searchController.searchBar.text?.lowercased(),
+              let toDos = presenter?.toDoListModel?.todos,
+              let presenter
+        else { return }
 
-        // TODO: add code to filter data
+        presenter.filteredToDos = toDos.filter {
+            $0.todo.lowercased().contains(searchText) || String($0.id).contains(searchText)
+        }
+
+        verticalStack.isHidden = !presenter.filteredToDos.isEmpty || !isFiltering
+        updatePlugs(with: verticalStack.isHidden)
+        tableView.reloadData()
     }
 }
 
@@ -327,7 +342,8 @@ extension ToDoListViewController: UITextFieldDelegate {
     // MARK: - UITableViewDataSource
 extension ToDoListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return presenter?.toDoListModel?.todos.count ?? .zero
+        guard let presenter else { return .zero }
+        return isFiltering ? presenter.filteredToDos.count : presenter.toDoListModel?.todos.count ?? .zero
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -336,7 +352,23 @@ extension ToDoListViewController: UITableViewDataSource {
             for: indexPath
         ) as? ToDoListTableViewCell else { return UITableViewCell() }
 
-        guard var viewModel = presenter?.toDoListModel?.todos[indexPath.row] else { return UITableViewCell() }
+        var viewModel: ToDo
+        if isFiltering {
+            viewModel = presenter?.filteredToDos[indexPath.row] ?? ToDo(
+                id: .zero,
+                todo: "",
+                completed: false,
+                userId: .zero
+            )
+        } else {
+            viewModel = presenter?.toDoListModel?.todos[indexPath.row] ?? ToDo(
+                id: .zero,
+                todo: "",
+                completed: false,
+                userId: .zero
+            )
+        }
+
         cell.configureCell(with: viewModel)
 
         cell.checkMarkButtonTapped = { [weak self] in
