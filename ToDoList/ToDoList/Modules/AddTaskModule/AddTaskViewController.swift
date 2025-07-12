@@ -231,7 +231,8 @@ final class AddTaskViewController: UIViewController {
     }
 
     @objc func enterButtonDidTap(sender: AnyObject) {
-        let modelToSave = NewToDoModel(
+        let modelToSave = LocalToDoModel(
+            id: UUID(),
             header: headerTextField.text ?? "",
             description: descriptionTextField.text ?? "",
             date: selectedDate ?? "",

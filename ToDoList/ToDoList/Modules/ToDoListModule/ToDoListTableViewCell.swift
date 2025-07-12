@@ -88,16 +88,15 @@ final class ToDoListTableViewCell: UITableViewCell {
     }
 
     // MARK: - Public methods
-    func configureCell(with viewModel: ToDo) {
-        let image: UIImage = viewModel.completed ? .checkMarkFilled : .checkMarkEmpty
+    func configureCell(with viewModel: LocalToDoModel) {
+        let image: UIImage = viewModel.isCompleted ? .checkMarkFilled : .checkMarkEmpty
         cellCheckMark.setImage(image, for: .normal)
 
-        let today = Date()
-        cellDataLabel.text = today.convertDateToString()
+        cellDataLabel.text = viewModel.date
 
-        let cellMainLabelText = "Задача \(viewModel.id)"
-        let cellDescriptionLabelText = viewModel.todo
-        switch viewModel.completed {
+        let cellMainLabelText = viewModel.header
+        let cellDescriptionLabelText = viewModel.description
+        switch viewModel.isCompleted {
         case true:
             cellMainLabel.attributedText = addStrikethrough(to: cellMainLabelText)
             cellMainLabel.textColor = .appWhiteOpacity

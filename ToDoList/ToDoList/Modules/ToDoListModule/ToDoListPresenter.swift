@@ -5,17 +5,19 @@
 //  Created by Эльдар Айдумов on 26.06.2025.
 //
 
+import Foundation
+
 protocol ToDoListPresenterProtocol: AnyObject {
     var router: ToDoListRouterProtocol? { get set}
-    var toDoListModel: ToDoListModel? { get set }
-    var filteredToDos: [ToDo] { get set }
+    var toDos: [LocalToDoModel] { get set }
+    var filteredToDos: [LocalToDoModel] { get set }
 
-    func configureView(with todos: ToDoListModel)
-    func navigateToDetailsVC(with selectedToDo: ToDo)
-    func navigateToEditTask(with selectedToDo: ToDo)
+    func configureView(with todos: NetworkToDoListModel)
+    func navigateToDetailsVC(with selectedToDo: LocalToDoModel)
+    func navigateToEditTask(with selectedToDo: LocalToDoModel)
     func navigateToAddTaskScreen()
     func triggerDataLoading()
-    func deleteTaskFromArray(itemToDelete: ToDo)
+    func deleteTaskFromArray(itemToDelete: LocalToDoModel)
 }
 
 final class ToDoListPresenter: ToDoListPresenterProtocol {
@@ -24,8 +26,8 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     weak var view: ToDoListViewControllerProtocol?
     var router: ToDoListRouterProtocol?
     var interactor: ToDoListInteractorProtocol?
-    var toDoListModel: ToDoListModel?
-    var filteredToDos = [ToDo]()
+    var toDos = [LocalToDoModel]()
+    var filteredToDos = [LocalToDoModel]()
 
     // MARK: - Initializers
     required init(view: ToDoListViewControllerProtocol) {
@@ -33,16 +35,25 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     }
 
     // MARK: - Pubic methods
-    func configureView(with todos: ToDoListModel) {
-        toDoListModel = todos
+    func configureView(with todos: NetworkToDoListModel) {
+        todos.todos.forEach {
+            let todo = LocalToDoModel(
+                id: UUID(),
+                header: "Задача \($0.id)",
+                description: $0.todo,
+                date: Date().convertDateToString(),
+                isCompleted: $0.completed
+            )
+            toDos.append(todo)
+        }
         view?.showToDoList()
     }
 
-    func navigateToDetailsVC(with selectedToDo: ToDo) {
+    func navigateToDetailsVC(with selectedToDo: LocalToDoModel) {
         router?.navigateToDetailsVC(with: selectedToDo)
     }
 
-    func navigateToEditTask(with selectedToDo: ToDo) {
+    func navigateToEditTask(with selectedToDo: LocalToDoModel) {
         router?.navigateToEditTask(with: selectedToDo)
     }
 
@@ -54,14 +65,8 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
         interactor?.fetchData()
     }
 
-    func deleteTaskFromArray(itemToDelete: ToDo) {
-        guard var model = toDoListModel else { return }
-
-        model.todos.removeAll { $0.id == itemToDelete.id }
-        model.total = model.todos.count
-
-        toDoListModel = model
-
+    func deleteTaskFromArray(itemToDelete: LocalToDoModel) {
+        toDos.removeAll { $0.id == itemToDelete.id }
         view?.showToDoList()
     }
 }

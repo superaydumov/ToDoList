@@ -8,7 +8,7 @@
 protocol AddTaskPresenterProtocol: AnyObject {
     var router: AddTaskRouterProtocol? { get set }
     func dismissViewController()
-    func saveNewToDo(todo: NewToDoModel)
+    func saveNewToDo(todo: LocalToDoModel)
 }
 
 final class AddTaskPresenter: AddTaskPresenterProtocol {
@@ -28,7 +28,7 @@ final class AddTaskPresenter: AddTaskPresenterProtocol {
         router?.dismissVC()
     }
 
-    func saveNewToDo(todo: NewToDoModel) {
+    func saveNewToDo(todo: LocalToDoModel) {
         // TODO: add saving to CoreData
         print(todo)
     }

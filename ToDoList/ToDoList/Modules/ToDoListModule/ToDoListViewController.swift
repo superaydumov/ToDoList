@@ -68,7 +68,7 @@ final class ToDoListViewController: UIViewController {
         label.font = .systemFont(ofSize: 11)
         label.textColor = .appWhite
         label.textAlignment = .natural
-        label.text = "\(presenter?.toDoListModel?.total ?? .zero) задач"
+//        label.text = "\(presenter?.toDos.count ?? .zero) "
 
         return label
     }()
@@ -225,7 +225,7 @@ final class ToDoListViewController: UIViewController {
 
     private func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
         let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
-            guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
+            guard let toDo = self.presenter?.toDos[indexPath.row] else { return }
             self.presenter?.navigateToEditTask(with: toDo)
             addHapticFeedback()
         }
@@ -255,7 +255,7 @@ final class ToDoListViewController: UIViewController {
             title: "Удалить",
             image: UIImage(systemName: "trash"),
             attributes: .destructive) { _ in
-                guard let toDo = self.presenter?.toDoListModel?.todos[indexPath.row] else { return }
+                guard let toDo = self.presenter?.toDos[indexPath.row] else { return }
                 self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
                 addHapticFeedback()
 
@@ -299,10 +299,14 @@ final class ToDoListViewController: UIViewController {
 extension ToDoListViewController: ToDoListViewControllerProtocol {
 
     func showToDoList() {
-        let isEmpty = presenter?.toDoListModel?.todos.isEmpty ?? true
+        let isEmpty = presenter?.toDos.isEmpty ?? true
         updatePlugs(with: isEmpty)
         verticalStack.isHidden = !isEmpty
         tableView.isHidden = isEmpty
+
+        let count = presenter?.toDos.count ?? 0
+        bottomLabel.text = "\(count) \(pluralizedTaskWord(for: count))"
+
         tableView.reloadData()
     }
 }
@@ -312,12 +316,14 @@ extension ToDoListViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
         guard let searchText = searchController.searchBar.text?.lowercased(),
-              let toDos = presenter?.toDoListModel?.todos,
+              let toDos = presenter?.toDos,
               let presenter
         else { return }
 
         presenter.filteredToDos = toDos.filter {
-            $0.todo.lowercased().contains(searchText) || String($0.id).contains(searchText)
+            $0.header.lowercased().contains(searchText) ||
+            $0.description.lowercased().contains(searchText) ||
+            $0.date.lowercased().contains(searchText)
         }
 
         verticalStack.isHidden = !presenter.filteredToDos.isEmpty || !isFiltering
@@ -343,7 +349,7 @@ extension ToDoListViewController: UITextFieldDelegate {
 extension ToDoListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let presenter else { return .zero }
-        return isFiltering ? presenter.filteredToDos.count : presenter.toDoListModel?.todos.count ?? .zero
+        return isFiltering ? presenter.filteredToDos.count : presenter.toDos.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -352,20 +358,22 @@ extension ToDoListViewController: UITableViewDataSource {
             for: indexPath
         ) as? ToDoListTableViewCell else { return UITableViewCell() }
 
-        var viewModel: ToDo
+        var viewModel: LocalToDoModel
         if isFiltering {
-            viewModel = presenter?.filteredToDos[indexPath.row] ?? ToDo(
-                id: .zero,
-                todo: "",
-                completed: false,
-                userId: .zero
+            viewModel = presenter?.filteredToDos[indexPath.row] ?? LocalToDoModel(
+                id: UUID(),
+                header: "",
+                description: "",
+                date: "",
+                isCompleted: false
             )
         } else {
-            viewModel = presenter?.toDoListModel?.todos[indexPath.row] ?? ToDo(
-                id: .zero,
-                todo: "",
-                completed: false,
-                userId: .zero
+            viewModel = presenter?.toDos[indexPath.row] ?? LocalToDoModel(
+                id: UUID(),
+                header: "",
+                description: "",
+                date: "",
+                isCompleted: false
             )
         }
 
@@ -373,8 +381,8 @@ extension ToDoListViewController: UITableViewDataSource {
 
         cell.checkMarkButtonTapped = { [weak self] in
             guard let self else { return }
-            viewModel.completed.toggle()
-            self.presenter?.toDoListModel?.todos[indexPath.row] = viewModel
+            viewModel.isCompleted.toggle()
+            self.presenter?.toDos[indexPath.row] = viewModel
             // TODO: notify presenter to save updated data
 
             self.tableView.reloadRows(at: [indexPath], with: .automatic)
@@ -398,7 +406,7 @@ extension ToDoListViewController: UITableViewDelegate {
         _ tableView: UITableView,
         didSelectRowAt indexPath: IndexPath
     ) {
-        guard let selectedToDo = presenter?.toDoListModel?.todos[indexPath.row] else { return }
+        guard let selectedToDo = presenter?.toDos[indexPath.row] else { return }
         presenter?.navigateToDetailsVC(with: selectedToDo)
     }
 
