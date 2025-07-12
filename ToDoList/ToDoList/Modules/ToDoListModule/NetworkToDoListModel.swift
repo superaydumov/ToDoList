@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct ToDoListModel: Codable {
-    var todos: [ToDo]
+struct NetworkToDoListModel: Codable {
+    var todos: [NetworkToDo]
     var total: Int
     let skip: Int
     let limit: Int
 }
 
-struct ToDo: Codable {
+struct NetworkToDo: Codable {
     let id: Int
     let todo: String
     var completed: Bool

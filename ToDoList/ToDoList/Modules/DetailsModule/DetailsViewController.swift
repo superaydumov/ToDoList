@@ -15,7 +15,7 @@ final class DetailsViewController: UIViewController {
 
     // MARK: - Stored properties
     var presenter: DetailsPresenterProtocol?
-    var selectedToDo: ToDo
+    var selectedToDo: LocalToDoModel
     var isEditingVC: Bool
     let configurator: DetailsConfiguratorProtocol = DetailsConfigurator()
 
@@ -107,7 +107,7 @@ final class DetailsViewController: UIViewController {
     }
 
     // MARK: - Initializers
-    init(selectedToDo: ToDo, isEditingVC: Bool) {
+    init(selectedToDo: LocalToDoModel, isEditingVC: Bool) {
         self.selectedToDo = selectedToDo
         self.isEditingVC = isEditingVC
         super.init(nibName: nil, bundle: nil)
@@ -119,10 +119,9 @@ final class DetailsViewController: UIViewController {
 
     // MARK: - Private methods
     private func configureVCData() {
-        let today = Date()
-        dateLabel.text = today.convertDateToString()
-        upperTextView.text = "Задача \(selectedToDo.id)"
-        bottomTextView.text = selectedToDo.todo
+        dateLabel.text = selectedToDo.date
+        upperTextView.text = selectedToDo.header
+        bottomTextView.text = selectedToDo.description
 
         switch isEditingVC {
         case true:
