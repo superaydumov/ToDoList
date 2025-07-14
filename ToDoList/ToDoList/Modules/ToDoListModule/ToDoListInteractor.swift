@@ -21,11 +21,17 @@ final class ToDoListInteractor: ToDoListInteractorProtocol {
         self.networkService = networkService
     }
 
+    func shouldLoadTodos() -> Bool {
+        return !UserDefaults.standard.bool(forKey: UserDefaultsKeys.hasLoadedToDos)
+    }
+
     func fetchData() {
+        guard shouldLoadTodos() else { return }
         networkService?.fetchData { [weak self] result in
             guard let self else { return }
             switch result {
             case .success(let toDos):
+                UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hasLoadedToDos)
                 DispatchQueue.main.async {
                     self.presenter?.configureView(with: toDos)
                 }
