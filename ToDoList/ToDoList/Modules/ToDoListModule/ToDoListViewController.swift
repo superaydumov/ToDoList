@@ -9,6 +9,7 @@ import UIKit
 
 protocol ToDoListViewControllerProtocol: AnyObject {
     func showToDoList()
+    func showError(message: String, retry: @escaping () -> Void)
 }
 
 final class ToDoListViewController: UIViewController {
@@ -308,6 +309,10 @@ extension ToDoListViewController: ToDoListViewControllerProtocol {
         bottomLabel.text = "\(count) \(pluralizedTaskWord(for: count))"
 
         tableView.reloadData()
+    }
+
+    func showError(message: String, retry: @escaping () -> Void) {
+        showAlert(message: message, retryAction: retry)
     }
 }
 
