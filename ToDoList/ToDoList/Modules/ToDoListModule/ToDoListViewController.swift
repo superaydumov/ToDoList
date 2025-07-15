@@ -4,12 +4,21 @@
 //
 //  Created by Эльдар Айдумов on 25.06.2025.
 //
+// swiftlint:disable file_length
 
 import UIKit
 
 protocol ToDoListViewControllerProtocol: AnyObject {
     func showToDoList()
     func showError(message: String, retry: @escaping () -> Void)
+    func startLoadingIndicator()
+    func hideLoading()
+}
+
+private enum PlugState {
+    case emptyList
+    case notFound
+    case hidden
 }
 
 final class ToDoListViewController: UIViewController {
@@ -105,9 +114,26 @@ final class ToDoListViewController: UIViewController {
         stack.axis = .vertical
         stack.spacing = 16
         stack.alignment = .center
-        stack.isHidden = true
 
         return stack
+    }()
+
+    private lazy var loadingIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView()
+        indicator.style = .large
+        indicator.hidesWhenStopped = true
+        indicator.color = .appAccent
+
+        return indicator
+    }()
+
+    private lazy var loadingContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.appBackground.withAlphaComponent(0.8)
+        view.layer.cornerRadius = 12
+        view.layer.masksToBounds = true
+
+        return view
     }()
 
     // MARK: - Lifecycle
@@ -116,19 +142,24 @@ final class ToDoListViewController: UIViewController {
         view.backgroundColor = .appBackground
 
         configurator.configure(with: self)
-        presenter?.triggerDataLoading()
 
         navBarSetup()
         setupSubViews()
         setupConstraints()
+        updatePlugs(.emptyList)
+        presenter?.triggerDataLoading()
     }
+}
 
-    // MARK: - Private methods
-    private func setupSubViews() {
+// MARK: - Private methods
+private extension ToDoListViewController {
+
+    func setupSubViews() {
         [
             verticalStack,
             tableView,
-            bottomView
+            bottomView,
+            loadingContainer
         ].forEach {
             view.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -143,9 +174,12 @@ final class ToDoListViewController: UIViewController {
             bottomView.addSubview($0)
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
+
+        loadingContainer.addSubview(loadingIndicator)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
     }
 
-    private func setupConstraints() {
+    func setupConstraints() {
         NSLayoutConstraint.activate([
             plugView.widthAnchor.constraint(equalToConstant: 200),
             plugView.heightAnchor.constraint(equalToConstant: 200),
@@ -170,11 +204,19 @@ final class ToDoListViewController: UIViewController {
             bottomButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -15.5),
             bottomButton.centerYAnchor.constraint(equalTo: bottomLabel.centerYAnchor),
             bottomButton.heightAnchor.constraint(equalToConstant: 22),
-            bottomButton.widthAnchor.constraint(equalToConstant: 22)
+            bottomButton.widthAnchor.constraint(equalToConstant: 22),
+
+            loadingContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            loadingContainer.widthAnchor.constraint(equalToConstant: 60),
+            loadingContainer.heightAnchor.constraint(equalToConstant: 60),
+
+            loadingIndicator.centerXAnchor.constraint(equalTo: loadingContainer.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: loadingContainer.centerYAnchor)
         ])
     }
 
-    private func navBarSetup() {
+    func navBarSetup() {
         guard let navBar = navigationController?.navigationBar else { return }
         title = "Задачи"
         navBar.prefersLargeTitles = true
@@ -224,7 +266,7 @@ final class ToDoListViewController: UIViewController {
         navigationItem.hidesSearchBarWhenScrolling = false
     }
 
-    private func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
+    func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
         let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
             guard let toDo = self.presenter?.toDos[indexPath.row] else { return }
             self.presenter?.navigateToEditTask(with: toDo)
@@ -272,7 +314,7 @@ final class ToDoListViewController: UIViewController {
         )
     }
 
-    private func getIndexPathFromConfiguration(with configuration: UIContextMenuConfiguration) -> IndexPath? {
+    func getIndexPathFromConfiguration(with configuration: UIContextMenuConfiguration) -> IndexPath? {
         guard let identifier = configuration.identifier as? String else { return nil }
         let components = identifier.components(separatedBy: ":")
 
@@ -284,13 +326,30 @@ final class ToDoListViewController: UIViewController {
         return IndexPath(row: row, section: section)
     }
 
-    private func updatePlugs(with property: Bool) {
-        plugView.image = property ? .emptyPlug : .notFoundPlug
-        plugLabel.text = property ? "Список задач пуст" : "Таких задач не найдено"
+    func updatePlugs(_ state: PlugState) {
+        switch state {
+        case .emptyList:
+            plugView.image = .emptyPlug
+            plugLabel.text = "Список задач пуст"
+            verticalStack.isHidden = false
+            tableView.isHidden = true
+
+        case .notFound:
+            plugView.image = .notFoundPlug
+            plugLabel.text = "Таких задач не найдено"
+            verticalStack.isHidden = false
+            tableView.isHidden = true
+
+        case .hidden:
+            plugView.image = nil
+            plugLabel.text = nil
+            verticalStack.isHidden = true
+            tableView.isHidden = false
+        }
     }
 
     // MARK: - Actions
-    @objc private func bottomButtonDidTap() {
+    @objc func bottomButtonDidTap() {
         presenter?.navigateToAddTaskScreen()
         addHapticFeedback()
     }
@@ -300,19 +359,30 @@ final class ToDoListViewController: UIViewController {
 extension ToDoListViewController: ToDoListViewControllerProtocol {
 
     func showToDoList() {
-        let isEmpty = presenter?.toDos.isEmpty ?? true
-        updatePlugs(with: isEmpty)
-        verticalStack.isHidden = !isEmpty
-        tableView.isHidden = isEmpty
-
         let count = presenter?.toDos.count ?? 0
-        bottomLabel.text = "\(count) \(pluralizedTaskWord(for: count))"
 
+        if count == 0 {
+            updatePlugs(.emptyList)
+        } else {
+            updatePlugs(.hidden)
+        }
+
+        bottomLabel.text = "\(count) \(pluralizedTaskWord(for: count))"
         tableView.reloadData()
     }
 
     func showError(message: String, retry: @escaping () -> Void) {
         showAlert(message: message, retryAction: retry)
+    }
+
+    func startLoadingIndicator() {
+        loadingContainer.isHidden = false
+        loadingIndicator.startAnimating()
+    }
+
+    func hideLoading() {
+        loadingIndicator.stopAnimating()
+        loadingContainer.isHidden = true
     }
 }
 
@@ -320,19 +390,27 @@ extension ToDoListViewController: ToDoListViewControllerProtocol {
 extension ToDoListViewController: UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
-        guard let searchText = searchController.searchBar.text?.lowercased(),
-              let toDos = presenter?.toDos,
-              let presenter
+        guard let presenter,
+              let searchText = searchController.searchBar.text?.lowercased()
         else { return }
 
-        presenter.filteredToDos = toDos.filter {
-            $0.header.lowercased().contains(searchText) ||
-            $0.description.lowercased().contains(searchText) ||
-            $0.date.lowercased().contains(searchText)
+        let isSearching = !searchText.isEmpty
+
+        if isSearching {
+            presenter.filteredToDos = presenter.toDos.filter {
+                $0.header.lowercased().contains(searchText) ||
+                $0.description.lowercased().contains(searchText) ||
+                $0.date.lowercased().contains(searchText)
+            }
+
+            updatePlugs(presenter.filteredToDos.isEmpty ? .notFound : .hidden)
+        } else {
+            presenter.filteredToDos = presenter.toDos
+
+            let isEmpty = presenter.toDos.isEmpty
+            updatePlugs(isEmpty ? .emptyList : .hidden)
         }
 
-        verticalStack.isHidden = !presenter.filteredToDos.isEmpty || !isFiltering
-        updatePlugs(with: verticalStack.isHidden)
         tableView.reloadData()
     }
 }

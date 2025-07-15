@@ -47,6 +47,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
             )
             toDos.append(todo)
         }
+        view?.hideLoading()
         view?.showToDoList()
     }
 
@@ -63,6 +64,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     }
 
     func triggerDataLoading() {
+        view?.startLoadingIndicator()
         interactor?.fetchData()
     }
 
