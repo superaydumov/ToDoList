@@ -13,7 +13,8 @@ final class ToDoListConfigurator: ToDoListConfiguratorProtocol {
 
     func configure(with viewController: ToDoListViewController) {
         let presenter = ToDoListPresenter(view: viewController)
-        let interactor = ToDoListInteractor(presenter: presenter)
+        let networkService = NetworkService()
+        let interactor = ToDoListInteractor(presenter: presenter, networkService: networkService)
         let router = ToDoListRouter(viewController: viewController)
 
         viewController.presenter = presenter

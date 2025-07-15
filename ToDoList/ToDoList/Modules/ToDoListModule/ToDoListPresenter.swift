@@ -17,6 +17,7 @@ protocol ToDoListPresenterProtocol: AnyObject {
     func navigateToEditTask(with selectedToDo: LocalToDoModel)
     func navigateToAddTaskScreen()
     func triggerDataLoading()
+    func fetchFailed(with error: NetworkErrors)
     func deleteTaskFromArray(itemToDelete: LocalToDoModel)
 }
 
@@ -46,6 +47,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
             )
             toDos.append(todo)
         }
+        view?.hideLoading()
         view?.showToDoList()
     }
 
@@ -62,7 +64,15 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     }
 
     func triggerDataLoading() {
+        view?.startLoadingIndicator()
         interactor?.fetchData()
+    }
+
+    func fetchFailed(with error: NetworkErrors) {
+        view?.showError(message: error.userMessage) { [weak self] in
+            guard let self else { return }
+            self.triggerDataLoading()
+        }
     }
 
     func deleteTaskFromArray(itemToDelete: LocalToDoModel) {
