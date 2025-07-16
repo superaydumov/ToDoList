@@ -57,7 +57,7 @@ final class CoreDataManager {
         }
     }
 
-    private func saveContext() {
+    func saveContext() {
         if context.hasChanges {
             try? context.save()
         }
