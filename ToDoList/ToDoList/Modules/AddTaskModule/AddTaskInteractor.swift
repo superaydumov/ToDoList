@@ -6,7 +6,7 @@
 //
 
 protocol AddTaskInteractorProtocol: AnyObject {
-    // TODO: add needed methods
+    func saveItemToCoreData(item: LocalToDoModel)
 }
 
 final class AddTaskInteractor: AddTaskInteractorProtocol {
@@ -15,5 +15,9 @@ final class AddTaskInteractor: AddTaskInteractorProtocol {
 
     required init(presenter: AddTaskPresenterProtocol) {
         self.presenter = presenter
+    }
+
+    func saveItemToCoreData(item: LocalToDoModel) {
+        CoreDataManager.shared.saveToDo(item)
     }
 }

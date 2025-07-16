@@ -5,6 +5,8 @@
 //  Created by Эльдар Айдумов on 09.07.2025.
 //
 
+import Foundation
+
 protocol AddTaskPresenterProtocol: AnyObject {
     var router: AddTaskRouterProtocol? { get set }
     func dismissViewController()
@@ -29,7 +31,7 @@ final class AddTaskPresenter: AddTaskPresenterProtocol {
     }
 
     func saveNewToDo(todo: LocalToDoModel) {
-        // TODO: add saving to CoreData
-        print(todo)
+        interactor?.saveItemToCoreData(item: todo)
+        NotificationCenter.default.post(name: .toDoListDidChange, object: nil)
     }
 }
