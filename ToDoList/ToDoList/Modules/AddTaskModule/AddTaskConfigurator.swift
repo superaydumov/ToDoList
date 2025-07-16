@@ -12,7 +12,7 @@ protocol AddTaskConfiguratorProtocol: AnyObject {
 final class AddTaskConfigurator: AddTaskConfiguratorProtocol {
 
     func configure(with viewController: AddTaskViewController) {
-        let presenter = AddTaskPresenter(view: viewController)
+        let presenter = AddTaskPresenter()
         let interactor = AddTaskInteractor(presenter: presenter)
         let router = AddTaskRouter(viewController: viewController)
 

@@ -12,12 +12,10 @@ protocol DetailsConfiguratorProtocol: AnyObject {
 final class DetailsConfigurator: DetailsConfiguratorProtocol {
 
     func configure(with viewController: DetailsViewController) {
-        let presenter = DetailsPresenter(view: viewController)
+        let presenter = DetailsPresenter()
         let interactor = DetailsInteractor(presenter: presenter)
-        let router = DetailsRouter(viewController: viewController)
 
         viewController.presenter = presenter
         presenter.interactor = interactor
-        presenter.router = router
     }
 }
