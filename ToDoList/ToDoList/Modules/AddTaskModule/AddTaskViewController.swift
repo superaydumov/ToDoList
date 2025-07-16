@@ -7,10 +7,6 @@
 
 import UIKit
 
-protocol AddTaskViewControllerProtocol: AnyObject {
-    // TODO: add needed methods
-}
-
 final class AddTaskViewController: UIViewController {
 
     // MARK: - Stored properties
@@ -242,11 +238,6 @@ final class AddTaskViewController: UIViewController {
         presenter?.dismissViewController()
         addHapticFeedback()
     }
-}
-
-    // MARK: - AddTaskViewControllerProtocol
-extension AddTaskViewController: AddTaskViewControllerProtocol {
-    // TODO: add needed methods
 }
 
     // MARK: - UITextFieldDelegate

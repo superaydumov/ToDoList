@@ -10,6 +10,7 @@ import Foundation
 protocol ToDoListInteractorProtocol: AnyObject {
     func fetchData()
     func deleteItemFromCoreData(item: LocalToDoModel)
+    func updateItemInCoreData(item: LocalToDoModel)
 }
 
 final class ToDoListInteractor: ToDoListInteractorProtocol {
@@ -53,5 +54,9 @@ final class ToDoListInteractor: ToDoListInteractorProtocol {
 
     func deleteItemFromCoreData(item: LocalToDoModel) {
         CoreDataManager.shared.deleteToDo(item)
+    }
+
+    func updateItemInCoreData(item: LocalToDoModel) {
+        CoreDataManager.shared.updateToDo(item)
     }
 }

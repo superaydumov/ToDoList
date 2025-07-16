@@ -7,10 +7,6 @@
 
 import UIKit
 
-protocol DetailsViewControllerProtocol: AnyObject {
-    func showDetails()
-}
-
 final class DetailsViewController: UIViewController {
 
     // MARK: - Stored properties
@@ -98,7 +94,6 @@ final class DetailsViewController: UIViewController {
         navigationItem.largeTitleDisplayMode = .never
 
         configurator.configure(with: self)
-        presenter?.configureView()
 
         setupSubviews()
         setupConstraints()
@@ -199,19 +194,11 @@ final class DetailsViewController: UIViewController {
             header: upperTextView.text ?? "",
             description: bottomTextView.text ?? "",
             date: selectedToDo.date,
-            isCompleted: selectedToDo.isCompleted
+            isCompleted: false
         )
         presenter?.updateToDo(itemToUpdate: modelToUpdate)
         upperTextView.resignFirstResponder()
         bottomTextView.resignFirstResponder()
         addHapticFeedback()
-    }
-}
-
-    // MARK: - DetailsViewControllerProtocol
-extension DetailsViewController: DetailsViewControllerProtocol {
-
-    func showDetails() {
-        // TODO: add code to update ToDoList
     }
 }

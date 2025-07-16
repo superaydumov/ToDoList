@@ -16,14 +16,8 @@ protocol AddTaskPresenterProtocol: AnyObject {
 final class AddTaskPresenter: AddTaskPresenterProtocol {
 
     // MARK: - Constants
-    weak var view: AddTaskViewControllerProtocol?
     var router: AddTaskRouterProtocol?
     var interactor: AddTaskInteractorProtocol?
-
-    // MARK: - Initializers
-    required init(view: AddTaskViewControllerProtocol) {
-        self.view = view
-    }
 
     // MARK: - Pubic methods
     func dismissViewController() {
