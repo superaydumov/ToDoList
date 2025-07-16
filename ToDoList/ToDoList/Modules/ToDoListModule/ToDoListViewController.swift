@@ -464,7 +464,7 @@ extension ToDoListViewController: UITableViewDataSource {
             guard let self else { return }
             viewModel.isCompleted.toggle()
             self.presenter?.toDos[indexPath.row] = viewModel
-            // TODO: notify presenter to save updated data
+            self.presenter?.updateToDo(itemToUpdate: viewModel)
 
             self.tableView.reloadRows(at: [indexPath], with: .automatic)
         }

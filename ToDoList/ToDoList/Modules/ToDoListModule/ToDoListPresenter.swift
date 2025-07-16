@@ -20,6 +20,7 @@ protocol ToDoListPresenterProtocol: AnyObject {
     func triggerDataLoading()
     func fetchFailed(with error: NetworkErrors)
     func deleteTaskFromArray(itemToDelete: LocalToDoModel)
+    func updateToDo(itemToUpdate: LocalToDoModel)
 }
 
 final class ToDoListPresenter: ToDoListPresenterProtocol {
@@ -95,6 +96,10 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
         toDos.removeAll { $0.id == itemToDelete.id }
         interactor?.deleteItemFromCoreData(item: itemToDelete)
         view?.showToDoList()
+    }
+
+    func updateToDo(itemToUpdate: LocalToDoModel) {
+        interactor?.updateItemInCoreData(item: itemToUpdate)
     }
 
     @objc private func handleToDoListChange() {
