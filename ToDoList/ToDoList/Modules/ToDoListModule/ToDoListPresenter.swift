@@ -57,8 +57,10 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
             CoreDataManager.shared.saveToDo(todo)
             toDos.append(todo)
         }
-        view?.hideLoading()
-        view?.showToDoList()
+        DispatchQueue.main.async {
+            self.view?.hideLoading()
+            self.view?.showToDoList()
+        }
     }
 
     func configureView(with localToDos: [LocalToDoModel]) {
@@ -96,7 +98,9 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
         toDos.removeAll { $0.id == itemToDelete.id }
         filteredToDos.removeAll { $0.id == itemToDelete.id }
         interactor?.deleteItemFromCoreData(item: itemToDelete)
-        view?.showToDoList()
+        DispatchQueue.main.async {
+            self.view?.showToDoList()
+        }
     }
 
     func updateToDo(itemToUpdate: LocalToDoModel) {
@@ -105,6 +109,8 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
     @objc private func handleToDoListChange() {
         toDos = CoreDataManager.shared.fetchToDos()
-        view?.showToDoList()
+        DispatchQueue.main.async {
+            self.view?.showToDoList()
+        }
     }
 }
