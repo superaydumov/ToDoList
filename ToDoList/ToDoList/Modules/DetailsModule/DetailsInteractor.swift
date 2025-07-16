@@ -1,12 +1,12 @@
 //
-//  DetaailsInteractor.swift
+//  DetailsInteractor.swift
 //  ToDoList
 //
 //  Created by Эльдар Айдумов on 30.06.2025.
 //
 
 protocol DetailsInteractorProtocol: AnyObject {
-    // TODO: add needed methods
+    func updateItemInCoreData(item: LocalToDoModel)
 }
 
 final class DetailsInteractor: DetailsInteractorProtocol {
@@ -15,5 +15,9 @@ final class DetailsInteractor: DetailsInteractorProtocol {
 
     required init(presenter: DetailsPresenterProtocol) {
         self.presenter = presenter
+    }
+
+    func updateItemInCoreData(item: LocalToDoModel) {
+        CoreDataManager.shared.updateToDo(item)
     }
 }

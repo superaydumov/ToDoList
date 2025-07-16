@@ -12,7 +12,8 @@ protocol ToDoListPresenterProtocol: AnyObject {
     var toDos: [LocalToDoModel] { get set }
     var filteredToDos: [LocalToDoModel] { get set }
 
-    func configureView(with todos: NetworkToDoListModel)
+    func configureView(with networkModel: NetworkToDoListModel)
+    func configureView(with localToDos: [LocalToDoModel])
     func navigateToDetailsVC(with selectedToDo: LocalToDoModel)
     func navigateToEditTask(with selectedToDo: LocalToDoModel)
     func navigateToAddTaskScreen()
@@ -33,11 +34,18 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     // MARK: - Initializers
     required init(view: ToDoListViewControllerProtocol) {
         self.view = view
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleToDoListChange),
+            name: .toDoListDidChange,
+            object: nil
+        )
     }
 
     // MARK: - Pubic methods
-    func configureView(with todos: NetworkToDoListModel) {
-        todos.todos.forEach {
+    func configureView(with networkModel: NetworkToDoListModel) {
+        networkModel.todos.forEach {
             let todo = LocalToDoModel(
                 id: UUID(),
                 header: "Задача \($0.id)",
@@ -45,8 +53,15 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
                 date: Date().convertDateToString(),
                 isCompleted: $0.completed
             )
+            CoreDataManager.shared.saveToDo(todo)
             toDos.append(todo)
         }
+        view?.hideLoading()
+        view?.showToDoList()
+    }
+
+    func configureView(with localToDos: [LocalToDoModel]) {
+        toDos = localToDos
         view?.hideLoading()
         view?.showToDoList()
     }
@@ -69,6 +84,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
     }
 
     func fetchFailed(with error: NetworkErrors) {
+        view?.hideLoading()
         view?.showError(message: error.userMessage) { [weak self] in
             guard let self else { return }
             self.triggerDataLoading()
@@ -77,6 +93,12 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
     func deleteTaskFromArray(itemToDelete: LocalToDoModel) {
         toDos.removeAll { $0.id == itemToDelete.id }
+        interactor?.deleteItemFromCoreData(item: itemToDelete)
+        view?.showToDoList()
+    }
+
+    @objc private func handleToDoListChange() {
+        toDos = CoreDataManager.shared.fetchToDos()
         view?.showToDoList()
     }
 }

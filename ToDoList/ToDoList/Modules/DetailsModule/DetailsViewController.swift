@@ -194,9 +194,17 @@ final class DetailsViewController: UIViewController {
     // MARK: - Actions
 
     @objc func enterButtonDidTap(sender: AnyObject) {
-        // TODO: add saving to CoreData
+        let modelToUpdate = LocalToDoModel(
+            id: selectedToDo.id,
+            header: upperTextView.text ?? "",
+            description: bottomTextView.text ?? "",
+            date: selectedToDo.date,
+            isCompleted: selectedToDo.isCompleted
+        )
+        presenter?.updateToDo(itemToUpdate: modelToUpdate)
+        upperTextView.resignFirstResponder()
+        bottomTextView.resignFirstResponder()
         addHapticFeedback()
-        print("enterButtonDidTap")
     }
 }
 

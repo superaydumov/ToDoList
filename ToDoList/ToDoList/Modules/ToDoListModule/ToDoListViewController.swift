@@ -301,8 +301,6 @@ private extension ToDoListViewController {
                 guard let toDo = self.presenter?.toDos[indexPath.row] else { return }
                 self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
                 addHapticFeedback()
-
-                // TODO: add code sync with CoreData (inside presenter)
             }
 
         return UIMenu(
