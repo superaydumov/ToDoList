@@ -94,6 +94,7 @@ final class ToDoListPresenter: ToDoListPresenterProtocol {
 
     func deleteTaskFromArray(itemToDelete: LocalToDoModel) {
         toDos.removeAll { $0.id == itemToDelete.id }
+        filteredToDos.removeAll { $0.id == itemToDelete.id }
         interactor?.deleteItemFromCoreData(item: itemToDelete)
         view?.showToDoList()
     }

@@ -267,29 +267,25 @@ private extension ToDoListViewController {
     }
 
     func makeContextMenu(for indexPath: IndexPath) -> UIMenu {
+        let currentList = isFiltering ? presenter?.filteredToDos : presenter?.toDos
+        guard let toDo = currentList?[indexPath.row] else { return UIMenu() }
+
         let editAction = UIAction(title: "Редактировать", image: UIImage(systemName: "pencil")) { _ in
-            guard let toDo = self.presenter?.toDos[indexPath.row] else { return }
             self.presenter?.navigateToEditTask(with: toDo)
             addHapticFeedback()
         }
 
         let shareAction = UIAction(
             title: "Поделиться",
-            image: UIImage(
-                systemName: "square.and.arrow.up"
-            )
+            image: UIImage(systemName: "square.and.arrow.up")
         ) { [weak self] _ in
             guard let self else { return }
-            let itemToShare = "Посмотри на эту задачу \(indexPath.row)"
-
+            let itemToShare = "Посмотри на эту задачу: \(toDo.header)"
             let activityVC = UIActivityViewController(activityItems: [itemToShare], applicationActivities: nil)
-            if let popoverController = activityVC.popoverPresentationController {
-                if let cell = tableView.cellForRow(at: indexPath) {
-                    popoverController.sourceView = cell
-                    popoverController.sourceRect = cell.bounds
-                }
+            if let cell = self.tableView.cellForRow(at: indexPath) {
+                activityVC.popoverPresentationController?.sourceView = cell
+                activityVC.popoverPresentationController?.sourceRect = cell.bounds
             }
-
             self.present(activityVC, animated: true)
             addHapticFeedback()
         }
@@ -297,19 +293,20 @@ private extension ToDoListViewController {
         let deleteAction = UIAction(
             title: "Удалить",
             image: UIImage(systemName: "trash"),
-            attributes: .destructive) { _ in
-                guard let toDo = self.presenter?.toDos[indexPath.row] else { return }
-                self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
-                addHapticFeedback()
+            attributes: .destructive
+        ) { _ in
+            self.presenter?.deleteTaskFromArray(itemToDelete: toDo)
+            if self.presenter?.filteredToDos.isEmpty == true, self.isFiltering {
+                self.updatePlugs(.notFound)
             }
+            addHapticFeedback()
+        }
 
-        return UIMenu(
-            children: [
-                editAction,
-                shareAction,
-                deleteAction
-            ]
-        )
+        return UIMenu(children: [
+            editAction,
+            shareAction,
+            deleteAction
+        ])
     }
 
     func getIndexPathFromConfiguration(with configuration: UIContextMenuConfiguration) -> IndexPath? {
@@ -394,17 +391,15 @@ extension ToDoListViewController: UISearchResultsUpdating {
 
         let isSearching = !searchText.isEmpty
 
-        if isSearching {
+        switch isSearching {
+        case true:
             presenter.filteredToDos = presenter.toDos.filter {
                 $0.header.lowercased().contains(searchText) ||
-                $0.description.lowercased().contains(searchText) ||
-                $0.date.lowercased().contains(searchText)
+                $0.description.lowercased().contains(searchText)
             }
-
             updatePlugs(presenter.filteredToDos.isEmpty ? .notFound : .hidden)
-        } else {
+        case false:
             presenter.filteredToDos = presenter.toDos
-
             let isEmpty = presenter.toDos.isEmpty
             updatePlugs(isEmpty ? .emptyList : .hidden)
         }
@@ -462,10 +457,20 @@ extension ToDoListViewController: UITableViewDataSource {
 
         cell.checkMarkButtonTapped = { [weak self] in
             guard let self else { return }
-            viewModel.isCompleted.toggle()
-            self.presenter?.toDos[indexPath.row] = viewModel
-            self.presenter?.updateToDo(itemToUpdate: viewModel)
+            switch isFiltering {
+            case true:
+                viewModel.isCompleted.toggle()
+                presenter?.updateToDo(itemToUpdate: viewModel)
+                presenter?.filteredToDos[indexPath.row] = viewModel
 
+                if let originalIndex = presenter?.toDos.firstIndex(where: { $0.id == viewModel.id }) {
+                    presenter?.toDos[originalIndex] = viewModel
+                }
+            case false:
+                viewModel.isCompleted.toggle()
+                presenter?.toDos[indexPath.row] = viewModel
+                presenter?.updateToDo(itemToUpdate: viewModel)
+            }
             self.tableView.reloadRows(at: [indexPath], with: .automatic)
         }
 
@@ -487,7 +492,8 @@ extension ToDoListViewController: UITableViewDelegate {
         _ tableView: UITableView,
         didSelectRowAt indexPath: IndexPath
     ) {
-        guard let selectedToDo = presenter?.toDos[indexPath.row] else { return }
+        let currentList = isFiltering ? presenter?.filteredToDos : presenter?.toDos
+        guard let selectedToDo = currentList?[indexPath.row] else { return }
         presenter?.navigateToDetailsVC(with: selectedToDo)
     }
 
